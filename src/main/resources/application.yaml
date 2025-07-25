@@ -1,0 +1,19 @@
+server:
+  port: 4002
+
+spring:
+  data:
+    r2dbc:
+      repositories:
+        enabled: true
+  r2dbc:
+    username: root
+    password: root
+    url: r2dbc:mysql://localhost:3307/patient_db
+logging:
+  level:
+    root: info
+
+  sql:
+    init:
+      mode: always
