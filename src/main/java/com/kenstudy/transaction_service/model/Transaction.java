@@ -23,6 +23,7 @@ public class Transaction {
     private Double amount;
     @Column("transact_type")
     private String TransactType;
+    private Boolean isClosed;
     @Column("transact_status")
     private String transactionStatus;
     private LocalDate createdDate;

@@ -45,10 +45,10 @@ public class TransactionServiceImpl implements TransactionService {
             return Mono.error(new TransactionNotFoundException("Transfer fund request must not be empty"));
         }
         // Transactional DB Save (no external call inside)
-        Mono<Transaction> savedTransactionMono = Mono.justOrEmpty(requestDTO.getAccountId())
+        Mono<Transaction> savedTransactionMono = Mono.justOrEmpty(requestDTO.getSenderAcctId())
                 .flatMap(transactClient::getCustomerAndAcctDetails)
                 .switchIfEmpty(Mono.error(new TransactionNotFoundException("Sender details not found")))
-                .zipWith(Mono.justOrEmpty(requestDTO.getRecipientId())
+                .zipWith(Mono.justOrEmpty(requestDTO.getRecipientAcctId())
                         .flatMap(transactClient::getCustomerAndAcctDetails)
                     .switchIfEmpty(Mono.error(new TransactionNotFoundException("Receiver details not found"))))
                 .flatMap(tuple -> {
@@ -97,7 +97,7 @@ public class TransactionServiceImpl implements TransactionService {
         paymt.setTransactStatus(res.getTransactionStatus());
         paymt.setTransactionId(res.getId());
         paymt.setAmount(res.getAmount());
-        paymt.setCustomerId(trans.getCustomerId());
+        paymt.setCustomerId(trans.getSenderId());
         paymt.setAccountId(res.getAccountId());
         paymt.setRecipientId(res.getRecipientId());
         return Mono.just(paymt);
@@ -106,15 +106,15 @@ public class TransactionServiceImpl implements TransactionService {
 
     private Mono<Transaction> checkTransactRequest(CustomerResponseDTO sender, TransferRequestDTO requestDTO, CustomerResponseDTO receiver) {
 
-        if (!sender.getAccountId().equals(requestDTO.getAccountId()) || !receiver.getAccountId().equals(requestDTO.getRecipientId())) {
+        if (!sender.getAccountId().equals(requestDTO.getSenderAcctId()) || !receiver.getAccountId().equals(requestDTO.getRecipientAcctId())) {
             return Mono.error(new TransactionNotFoundException("Sender/Receiver Account ID does not match"));
         }
 
         if (requestDTO.getAmount() < 2) {
             return Mono.error(new TransactionNotFoundException("Transfer must be from $2"));
         }
-        if (!sender.getId().equals(requestDTO.getCustomerId())) {
-            return Mono.error(new TransactionNotFoundException("Customer Id: " + requestDTO.getCustomerId() + " with Account " + "details not found"));
+        if (!sender.getId().equals(requestDTO.getSenderId())) {
+            return Mono.error(new TransactionNotFoundException("Customer Id: " + requestDTO.getSenderId() + " with Account " + "details not found"));
         }
 
         if (requestDTO.getAmount() > 10000) {
@@ -122,8 +122,8 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         Transaction transaction = new Transaction();
-        transaction.setAccountId(requestDTO.getAccountId());
-        transaction.setRecipientId(requestDTO.getRecipientId());
+        transaction.setAccountId(requestDTO.getSenderAcctId());
+        transaction.setRecipientId(requestDTO.getRecipientAcctId());
         transaction.setAmount(requestDTO.getAmount());
         transaction.setDescription(requestDTO.getDescription());
         transaction.setTransactionStatus(TransactStatus.TRANSACTION_CREATED.name());
@@ -137,7 +137,7 @@ public class TransactionServiceImpl implements TransactionService {
         TransactionResponseDTO output = new TransactionResponseDTO();
         output.setAccountId(trans.getAccountId());
         output.setTransactionId(trans.getId());
-        output.setCustomerId(req.getCustomerId());
+        output.setCustomerId(req.getSenderId());
         output.setRecipientId(trans.getRecipientId());
         output.setAmount(trans.getAmount());
         output.setTransactionType(trans.getTransactType());
