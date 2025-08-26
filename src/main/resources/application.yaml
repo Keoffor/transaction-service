@@ -10,6 +10,33 @@ spring:
     username: root
     password: root
     url: r2dbc:mysql://localhost:3307/patient_db
+
+
+
+  cloud:
+    function:
+      definition: customerEventConsumer;transactSupplier;accountEventResultPublisher;accountEventFailureConsumer
+    stream:
+      default:
+        contentType: application/json
+      bindings:
+        customerEventConsumer-in-0:
+          destination: customerEvent
+        transactSupplier-out-0:
+          destination: transactEvent
+        accountEventResultPublisher-in-0:
+          destination: accountEventSuccess
+        accountEventFailureConsumer-in-0:
+          destination: accountEventFailure
+        transactEventSuccess-out-0:
+          destination: transactEventSuccess
+        transactEventFailure-out-0:
+          destination: transactEventFailure
+
+      kafka:
+        binder:
+          brokers: localhost:9092
+
 logging:
   level:
     root: info
